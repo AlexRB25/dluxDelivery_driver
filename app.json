@@ -1,0 +1,54 @@
+{
+  "expo": {
+    "name": "Dlux Driver",
+    "slug": "dlux-driver",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "dluxdriver",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "bundleIdentifier": "com.dlux.driver",
+      "supportsTablet": false,
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Dlux Driver usa tu ubicación para ofrecerte viajes cercanos y para que el cliente vea dónde vas."
+      }
+    },
+    "android": {
+      "package": "com.dlux.driver",
+      "adaptiveIcon": {
+        "backgroundColor": "#DFDFDF",
+        "foregroundImage": "./assets/images/adaptive-icon.png"
+      },
+      "permissions": ["ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION", "VIBRATE"],
+      "predictiveBackGestureEnabled": false
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#DFDFDF",
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 160
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Dlux Driver usa tu ubicación para ofrecerte viajes cercanos y para que el cliente vea dónde vas."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Dlux Driver usa tus fotos para subir tus documentos y los tickets de compra.",
+          "cameraPermission": "Dlux Driver usa la cámara para fotografiar tus documentos y los tickets de compra."
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
