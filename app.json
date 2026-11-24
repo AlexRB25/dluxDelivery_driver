@@ -11,7 +11,8 @@
       "bundleIdentifier": "com.dlux.driver",
       "supportsTablet": false,
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "Dlux Driver usa tu ubicación para ofrecerte viajes cercanos y para que el cliente vea dónde vas."
+        "NSLocationWhenInUseUsageDescription": "Dlux Driver usa tu ubicación para ofrecerte viajes cercanos y para que el cliente vea dónde vas.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Dlux Driver usa tu ubicación mientras estás conectado, aunque uses otra app o apagues la pantalla, para ofrecerte viajes y que el cliente vea dónde vas."
       }
     },
     "android": {
@@ -20,7 +21,16 @@
         "backgroundColor": "#DFDFDF",
         "foregroundImage": "./assets/images/adaptive-icon.png"
       },
-      "permissions": ["ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION", "VIBRATE"],
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION",
+        "FOREGROUND_SERVICE",
+        "FOREGROUND_SERVICE_LOCATION",
+        "POST_NOTIFICATIONS",
+        "SYSTEM_ALERT_WINDOW",
+        "VIBRATE"
+      ],
       "predictiveBackGestureEnabled": false
     },
     "plugins": [
@@ -36,7 +46,11 @@
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "Dlux Driver usa tu ubicación para ofrecerte viajes cercanos y para que el cliente vea dónde vas."
+          "locationWhenInUsePermission": "Dlux Driver usa tu ubicación para ofrecerte viajes cercanos y para que el cliente vea dónde vas.",
+          "locationAlwaysAndWhenInUsePermission": "Dlux Driver usa tu ubicación mientras estás conectado, aunque uses otra app o apagues la pantalla, para ofrecerte viajes y que el cliente vea dónde vas.",
+          "isAndroidBackgroundLocationEnabled": true,
+          "isAndroidForegroundServiceEnabled": true,
+          "isIosBackgroundLocationEnabled": true
         }
       ],
       [
@@ -44,6 +58,13 @@
         {
           "photosPermission": "Dlux Driver usa tus fotos para subir tus documentos y los tickets de compra.",
           "cameraPermission": "Dlux Driver usa la cámara para fotografiar tus documentos y los tickets de compra."
+        }
+      ],
+      "expo-web-browser",
+      [
+        "expo-notifications",
+        {
+          "color": "#001F3F"
         }
       ]
     ],

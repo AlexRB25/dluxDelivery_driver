@@ -3,8 +3,9 @@ import { useCallback, useEffect, useState } from "react";
 import { Linking, Switch, View } from "react-native";
 
 import { Badge, Button, C, Card, H2, Item, Loading, Money, Muted, Notice, Row, Screen, T } from "@/components/ui";
+import { abrirPermisoBurbuja, burbujaDisponible, permisoBurbuja } from "@/lib/burbuja";
 import { useDriver } from "@/lib/driver";
-import { DOCUMENTO, ESTADO, TIPO, VEHICULO, pesos, whatsapp } from "@/lib/format";
+import { DOCUMENTO, ESTADO, TIPO, VEHICULO, pesos } from "@/lib/format";
 import { rpc, soporteWhatsapp, supabase } from "@/lib/supabase";
 import type { Registered, TripDetail } from "@/lib/types";
 
@@ -46,7 +47,10 @@ function Registrarme({ userId, onDone }: { userId: string; onDone: () => Promise
 
 function Panel({ s, locationDenied }: { s: Registered; locationDenied: boolean }) {
   const router = useRouter();
-  const { goOnline, goOffline, refresh } = useDriver();
+  const { goOnline, goOffline, refresh, background } = useDriver();
+  // el permiso de la burbuja se da en Ajustes: se vuelve a revisar al regresar a esta pantalla
+  const [burbujaOk, setBurbujaOk] = useState(permisoBurbuja);
+  useFocusEffect(useCallback(() => setBurbujaOk(permisoBurbuja()), []));
   const [cambiando, setCambiando] = useState(false);
   const [error, setError] = useState("");
   const interno = s.internal_brands.length > 0;
@@ -67,7 +71,7 @@ function Panel({ s, locationDenied }: { s: Registered; locationDenied: boolean }
     });
   if (!s.tax_ok) pendientes.push({ icon: "receipt", titulo: "Completa tus datos fiscales", sub: "RFC y CURP para tus retenciones", ir: () => router.push("/fiscal"), bloquea: false });
   if (!s.subscription_ok && !interno)
-    pendientes.push({ icon: "card", titulo: "Paga tu membresía", sub: "Sin membresía al día no te llegan viajes", bloquea: true });
+    pendientes.push({ icon: "card", titulo: "Paga tu membresía", sub: "Sin membresía al día no te llegan viajes", ir: () => router.push("/membresia"), bloquea: true });
   if (s.status === "pending" && !s.missing_docs.length) pendientes.push({ icon: "time", titulo: "Dlux está revisando tu cuenta", sub: "Te avisamos en cuanto quedes aprobado", bloquea: true });
 
   const cambiar = async (on: boolean) => {
@@ -89,7 +93,11 @@ function Panel({ s, locationDenied }: { s: Registered; locationDenied: boolean }
           <View style={{ flex: 1 }}>
             <T bold style={{ fontSize: 20, color: s.online ? "#fff" : C.text }}>{s.online ? "Estás conectado" : "Estás desconectado"}</T>
             <Muted style={{ color: s.online ? C.gray : C.muted }}>
-              {s.online ? "Te avisamos con vibración cuando llegue un viaje. Deja la app abierta." : "Conéctate para empezar a recibir viajes."}
+              {s.online
+                ? background === "ok"
+                  ? "Te avisamos cuando llegue un viaje, aunque uses otra app o apagues la pantalla."
+                  : "Te avisamos con vibración cuando llegue un viaje. Deja la app abierta."
+                : "Conéctate para empezar a recibir viajes."}
             </Muted>
           </View>
           <Switch
@@ -110,6 +118,22 @@ function Panel({ s, locationDenied }: { s: Registered; locationDenied: boolean }
       </Card>
 
       {locationDenied && <Notice tone="danger" icon="location">Activa el permiso de ubicación para Dlux Driver: sin él no te llegan viajes.</Notice>}
+      {background === "sin-permiso" && (
+        <Item
+          icon="location"
+          title="Permite la ubicación «todo el tiempo»"
+          subtitle="Así te llegan viajes con la pantalla apagada o usando otra app"
+          onPress={() => Linking.openSettings()}
+        />
+      )}
+      {s.online && burbujaDisponible && !burbujaOk && (
+        <Item
+          icon="ellipse"
+          title="Activa la burbuja de Dlux"
+          subtitle="Te avisa de los viajes encima de otras apps (Waze, Maps…)"
+          onPress={abrirPermisoBurbuja}
+        />
+      )}
 
       {s.active_trips.length > 0 && (
         <View style={{ gap: 8 }}>
@@ -126,10 +150,17 @@ function Panel({ s, locationDenied }: { s: Registered; locationDenied: boolean }
           {pendientes.map((p) => (
             <Item key={p.titulo} icon={p.icon} title={p.titulo} subtitle={p.sub} onPress={p.ir} right={p.bloquea ? undefined : <Badge>opcional</Badge>} />
           ))}
-          {!s.subscription_ok && !interno && soporteWhatsapp ? (
-            <Button variant="outline" icon="logo-whatsapp" title="Pagar membresía con Dlux" onPress={() => whatsapp(soporteWhatsapp, "Hola, quiero pagar mi membresía de Dlux Driver")} />
-          ) : null}
         </View>
+      )}
+
+      {s.status === "approved" && (s.online || s.destination) && (
+        <Item
+          icon={s.destination ? "home" : "navigate"}
+          title={s.destination ? "Vas rumbo a tu destino" : "Voy a mi destino"}
+          subtitle={s.destination ? "Solo te llegan viajes que te acercan · cambiar o quitar" : `Solo viajes que te acerquen a casa · ${s.destination_uses_left} ${s.destination_uses_left === 1 ? "uso" : "usos"} hoy`}
+          onPress={() => router.push("/destino")}
+          right={s.destination ? <Badge tone="navy">activo</Badge> : undefined}
+        />
       )}
 
       <Card>

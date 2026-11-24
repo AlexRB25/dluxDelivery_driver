@@ -1,9 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { Text, View, Vibration } from "react-native";
+import { ScrollView, Text, View, Vibration } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { Mapa } from "@/components/Mapa";
 import { Button, C, Card, Muted, Notice, Row, T } from "@/components/ui";
 import { useDriver } from "@/lib/driver";
 import { TIPO, km, minutos, pesos } from "@/lib/format";
@@ -14,7 +15,7 @@ import type { TripDetail } from "@/lib/types";
 export default function Oferta() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { status, refresh } = useDriver();
+  const { status, refresh, position } = useDriver();
   const [t, setT] = useState<TripDetail | null>(null);
   const [error, setError] = useState("");
   const inicial = status?.registered && status.offer?.trip_id === id ? status.offer.expires_in : 20;
@@ -56,6 +57,7 @@ export default function Oferta() {
           </View>
         </Row>
 
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ gap: 12, paddingBottom: 8 }}>
         {error ? <Notice tone="danger">{error}</Notice> : null}
 
         {t && (
@@ -66,6 +68,13 @@ export default function Oferta() {
                 {t.service} · {km(t.distance_m)} · {minutos(t.duration_s)}
               </Text>
             </View>
+
+            <Mapa
+              style={{ height: 160 }}
+              yo={position}
+              ruta
+              puntos={t.stops.map((x, i) => ({ lat: x.lat, lng: x.lng, tipo: i === 0 ? "recoge" : i === t.stops.length - 1 ? "entrega" : "parada" }))}
+            />
 
             {t.danger && <Notice tone="danger" icon="warning">Parte de la ruta pasa por una zona de riesgo.</Notice>}
 
@@ -110,7 +119,7 @@ export default function Oferta() {
           </>
         )}
 
-        <View style={{ flex: 1 }} />
+        </ScrollView>
         <Button
           big
           variant="yellow"

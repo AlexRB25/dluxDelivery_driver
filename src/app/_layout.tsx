@@ -26,6 +26,8 @@ export default function RootLayout() {
         <Stack.Screen name="vehiculos" options={{ title: "Mis vehículos" }} />
         <Stack.Screen name="fiscal" options={{ title: "Datos fiscales" }} />
         <Stack.Screen name="perfil" options={{ title: "Mis datos" }} />
+        <Stack.Screen name="membresia" options={{ title: "Membresía" }} />
+        <Stack.Screen name="destino" options={{ title: "Voy a mi destino" }} />
       </Stack>
     </DriverProvider>
   );

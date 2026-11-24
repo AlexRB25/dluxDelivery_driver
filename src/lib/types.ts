@@ -15,6 +15,8 @@ export type DriverStatus =
       rejected_docs: string[];
       tax_ok: boolean;
       destination: boolean;
+      destination_point: { lat: number; lng: number } | null;
+      destination_uses_left: number;
       offer: { trip_id: string; expires_in: number } | null;
       active_trips: string[];
       today: { trips: number; earned: number };
@@ -93,4 +95,12 @@ export type Earnings = {
   days: { day: string; earned: number | null; net: number; trips: number }[];
   entries: { at: string; kind: string; amount: number; trip_id: string | null; note: string | null }[];
   balance: number;
+};
+
+export type Membership = {
+  plan: { id: string; name: string; price_month: number; grace_days: number } | null;
+  ok: boolean;
+  internal: boolean;
+  until: string | null;
+  payments: { at: string; until: string; method: "online" | "dlux" }[];
 };

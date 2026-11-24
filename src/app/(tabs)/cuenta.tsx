@@ -1,14 +1,26 @@
-import { useRouter } from "expo-router";
-import { Alert, View } from "react-native";
+import { useFocusEffect, useRouter } from "expo-router";
+import { useCallback, useState } from "react";
+import { Alert, Linking, Switch, View } from "react-native";
 
-import { Badge, Button, Card, H2, Item, Loading, Muted, Screen } from "@/components/ui";
+import { Badge, Button, C, Card, H2, Item, Loading, Muted, Screen } from "@/components/ui";
+import { abrirPermisoBurbuja, activarBurbuja, burbujaActivada, burbujaDisponible, permisoBurbuja } from "@/lib/burbuja";
 import { useDriver } from "@/lib/driver";
+import { olvidarPush } from "@/lib/push";
+import { detenerSegundoPlano } from "@/lib/segundo-plano";
 import { VEHICULO, fecha } from "@/lib/format";
 import { supabase } from "@/lib/supabase";
 
 export default function Cuenta() {
   const router = useRouter();
   const { status, session, goOffline } = useDriver();
+  const [burbuja, setBurbuja] = useState(false);
+  const [burbujaPermiso, setBurbujaPermiso] = useState(false);
+  useFocusEffect(
+    useCallback(() => {
+      setBurbujaPermiso(permisoBurbuja());
+      void burbujaActivada().then(setBurbuja);
+    }, []),
+  );
   if (!status) return <Loading />;
   const s = status.registered ? status : null;
 
@@ -46,10 +58,38 @@ export default function Cuenta() {
               title="Membresía"
               subtitle={s.subscription_ok ? `Al día${s.subscription_until ? ` hasta el ${fecha(s.subscription_until)}` : ""}` : "Vencida o sin pagar"}
               right={<Badge tone={s.subscription_ok ? "ok" : "danger"}>{s.subscription_ok ? "al día" : "pendiente"}</Badge>}
+              onPress={() => router.push("/membresia")}
             />
             {s.internal_brands.length > 0 && <Item icon="storefront" title="Repartidor de" subtitle={s.internal_brands.join(", ")} />}
           </>
         )}
+      </View>
+
+      <View style={{ gap: 8 }}>
+        {burbujaDisponible && (
+          <Item
+            icon="ellipse"
+            title="Burbuja de Dlux"
+            subtitle={burbujaPermiso ? "Aparece sobre otras apps mientras estás conectado" : "Falta el permiso «Mostrar sobre otras apps»"}
+            onPress={burbujaPermiso ? undefined : abrirPermisoBurbuja}
+            right={
+              burbujaPermiso ? (
+                <Switch
+                  value={burbuja}
+                  onValueChange={(v) => {
+                    setBurbuja(v);
+                    void activarBurbuja(v);
+                  }}
+                  trackColor={{ true: C.yellow, false: C.gray }}
+                  thumbColor={burbuja ? C.navy : "#fff"}
+                />
+              ) : (
+                <Badge tone="warn">activar</Badge>
+              )
+            }
+          />
+        )}
+        <Item icon="notifications" title="Notificaciones y permisos" subtitle="Sonido de ofertas, ubicación «todo el tiempo»" onPress={() => Linking.openSettings()} />
       </View>
 
       <Button
@@ -64,6 +104,8 @@ export default function Cuenta() {
               style: "destructive",
               onPress: async () => {
                 if (s?.online) await goOffline().catch(() => {});
+                await detenerSegundoPlano();
+                await olvidarPush();
                 await supabase().auth.signOut();
                 router.replace("/entrar");
               },

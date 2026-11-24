@@ -8,6 +8,8 @@ const key = process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 export const supabaseConfigured = Boolean(url && key);
 /** WhatsApp de soporte de Dlux (10 dígitos), para "Escríbele a Dlux". */
 export const soporteWhatsapp = process.env.EXPO_PUBLIC_SOPORTE_WHATSAPP ?? "";
+/** Servidor de Dlux (el panel en Next.js): cobros con Stripe. Sin él, la membresía se paga con Dlux por WhatsApp. */
+export const apiUrl = (process.env.EXPO_PUBLIC_API_URL ?? "").replace(/\/$/, "");
 
 const client = createClient(url || "https://sin-configurar.supabase.co", key || "sin-configurar", {
   auth: { storage: AsyncStorage, autoRefreshToken: true, persistSession: true, detectSessionInUrl: false },

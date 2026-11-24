@@ -4,6 +4,7 @@ import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import { Alert, Image, Switch, View } from "react-native";
 
+import { Mapa, type PuntoMapa } from "@/components/Mapa";
 import { Badge, Button, C, Card, Field, H2, Loading, Money, Muted, Notice, Row, Screen, T } from "@/components/ui";
 import { useDriver } from "@/lib/driver";
 import { ESTADO, TIPO, hora, km, llamar, minutos, navegar, pesos, whatsapp } from "@/lib/format";
@@ -15,7 +16,7 @@ const FINAL = ["completed", "canceled"];
 export default function Viaje() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { refresh: refreshDriver } = useDriver();
+  const { refresh: refreshDriver, position } = useDriver();
   const [t, setT] = useState<TripDetail | null>(null);
   const [error, setError] = useState("");
   const [ahora, setAhora] = useState(() => Date.now());
@@ -70,6 +71,8 @@ export default function Viaje() {
   return (
     <Screen>
       <Stack.Screen options={{ title: `${TIPO[t.kind] ?? t.kind} · ${ESTADO[t.status]}` }} />
+
+      {!FINAL.includes(t.status) && <Mapa puntos={puntosDelViaje(t)} yo={position} ruta />}
 
       <Card>
         <Row style={{ justifyContent: "space-between" }}>
@@ -400,4 +403,17 @@ function Pausa({ t, onDone }: { t: TripDetail; onDone: () => Promise<void> }) {
       />
     </Card>
   );
+}
+
+/** Paradas que faltan, en orden: R = recoger, números = paradas intermedias, E = entrega final. */
+function puntosDelViaje(t: TripDetail): PuntoMapa[] {
+  const ultima = t.stops[t.stops.length - 1]?.seq;
+  return t.stops
+    .filter((s) => !s.done_at)
+    .map((s) => ({
+      lat: s.lat,
+      lng: s.lng,
+      tipo: s.kind === "pickup" ? "recoge" : s.seq === ultima ? "entrega" : "parada",
+      titulo: s.address,
+    }));
 }
